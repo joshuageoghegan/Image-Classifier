@@ -1,4 +1,4 @@
-#python ImageClassifier/predict.py --pathtoimage /home/workspace/ImageClassifier/flowers/train/102/image_08000.jpg --checkpoint /ImageClassifier/classifier_pth --topk 5 --catnames cat_to_name.json --gpu Y
+#python ImageClassifier/predict.py --pathtoimage /home/workspace/ImageClassifier/flowers/train/102/image_08000.jpg --checkpoint /home/workspace/ImageClassifier/classifier.pth --topk 5 --category_names cat_to_name.json --gpu Y
 
 import matplotlib.pyplot as plt
 import seaborn as sb
@@ -9,17 +9,15 @@ from torch import nn
 from torch import optim
 import torch.nn.functional as F
 import torchvision.models as models
+from utility_func import *
 
 import json
 
 from train import get_input_args
-#from train import main
 
 in_arg = get_input_args()
-with open('ImageClassifier/'+in_arg.catnames, 'r') as f:
+with open('ImageClassifier/'+in_arg.category_names, 'r') as f:
     cat_to_name = json.load(f)
-
-#import time
 
 from PIL import Image
 
@@ -33,16 +31,14 @@ import model_func
 import argparse
 from train import *
 
-in_arg = get_input_args()
-model_name = in_arg.arch
-model = models[model_name]
+def main():
+#def inference(in_arg, model, train_data, imagepath, cat_to_name):  
 
-def inference(in_arg, model, train_data, imagepath, cat_to_name):
-    
-    chkdir = in_arg.checkpoint_dir
-        
-    filepath = chkdir+'/classifier_pth'
-    load_checkpoint(model, train_data, filepath)
+    in_arg = get_input_args()
+
+    filepath = in_arg.checkpoint
+          
+    load_checkpoint(filepath, in_arg)
     
     #process image for inference
     process_image(imagepath)
@@ -51,11 +47,20 @@ def inference(in_arg, model, train_data, imagepath, cat_to_name):
     #imshow(image)
     
     #predict top 5 probability
-    predict(imagepath, model, train_data, cat_to_name)
+    model = load_checkpoint(filepath, in_arg)
+    
+    #if in_arg.gpu == 'Y':
+    #    model.to('cuda')
+    #else:
+    #    model.to('cpu')
+
+    predict(imagepath, model, cat_to_name, in_arg)
     
     #sanity checking
     #SanityCheck(img, image_path, model)
     
-train_data, validation_data, test_data = data_transform(in_arg)
+#train_data, validation_data, test_data = data_transform(in_arg)
 imagepath = in_arg.pathtoimage
-inference(in_arg, model, train_data, imagepath, cat_to_name)    
+
+if __name__ == '__main__': #need this otherwise if I create a function called main and import it, it will run instead.
+    main()
